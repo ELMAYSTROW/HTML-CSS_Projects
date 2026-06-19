@@ -1,0 +1,1940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOENIGSEGG — Engineering the Impossible</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Chakra+Petch:wght@200;300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --gold: #c9a96e;
+    --gold-dim: #8a6e45;
+    --carbon: #0a0a0a;
+    --dark: #050505;
+    --mid: #111111;
+    --glass: rgba(255,255,255,0.03);
+    --glass-border: rgba(201,169,110,0.15);
+    --text: #e8e0d0;
+    --text-dim: #6b6455;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; overflow-x: hidden; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Chakra Petch', monospace;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  #cursor {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    background: var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, width 0.3s, height 0.3s, background 0.3s;
+    mix-blend-mode: difference;
+  }
+  #cursor-ring {
+    position: fixed;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.12s ease-out, width 0.4s, height 0.4s, opacity 0.3s;
+    opacity: 0.6;
+  }
+
+  /* LOADING SCREEN */
+  #loader {
+    position: fixed;
+    inset: 0;
+    background: var(--dark);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 1s ease, visibility 1s;
+  }
+  #loader.hidden { opacity: 0; visibility: hidden; }
+
+  .loader-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 300;
+    letter-spacing: 0.4em;
+    color: var(--gold);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeIn 1s 0.3s forwards;
+  }
+  .loader-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeIn 1s 0.6s forwards;
+    text-transform: uppercase;
+  }
+  .progress-container {
+    width: 300px;
+    height: 1px;
+    background: rgba(201,169,110,0.15);
+    position: relative;
+    overflow: visible;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+    width: 0%;
+    transition: width 0.3s ease;
+    position: relative;
+  }
+  .progress-bar::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: -3px;
+    width: 3px;
+    height: 7px;
+    background: var(--gold);
+    box-shadow: 0 0 10px var(--gold);
+  }
+  .progress-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--gold-dim);
+    margin-top: 1rem;
+    letter-spacing: 0.2em;
+  }
+
+  /* NAVBAR */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    padding: 1.5rem 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+    backdrop-filter: blur(0px);
+    transition: backdrop-filter 0.3s, background 0.3s;
+    border-bottom: 1px solid transparent;
+  }
+  nav.scrolled {
+    backdrop-filter: blur(20px);
+    background: rgba(5,5,5,0.8);
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: 0.35em;
+    color: var(--gold);
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+  .nav-links {
+    display: flex;
+    gap: 3rem;
+    list-style: none;
+  }
+  .nav-links a {
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    color: var(--text-dim);
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 0.3s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--gold);
+    transition: width 0.3s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-links a:hover::after { width: 100%; }
+
+  .nav-cta {
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 0.6rem 1.4rem;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: background 0.3s, color 0.3s;
+  }
+  .nav-cta:hover { background: var(--gold); color: var(--dark); }
+
+  /* HERO */
+  #hero {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  #canvas-container {
+    position: absolute;
+    inset: 0;
+  }
+  #three-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(5,5,5,0.6) 100%);
+    pointer-events: none;
+  }
+  .hero-bottom-fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30%;
+    background: linear-gradient(to top, var(--dark), transparent);
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: absolute;
+    bottom: 12vh;
+    left: 4rem;
+    right: 4rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+  .hero-left { pointer-events: all; }
+
+  .hero-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.4em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideUp 1s 2s forwards;
+  }
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3.5rem, 8vw, 7rem);
+    font-weight: 300;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    color: #fff;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: slideUp 1.2s 2.2s forwards;
+    margin-bottom: 1.5rem;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--gold);
+  }
+  .hero-tagline {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideUp 1s 2.4s forwards;
+  }
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 1rem 2rem;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: all 0.4s;
+    opacity: 0;
+    animation: slideUp 1s 2.6s forwards;
+    cursor: none;
+    background: transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-cta::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gold);
+    transform: translateX(-100%);
+    transition: transform 0.4s ease;
+  }
+  .hero-cta:hover::before { transform: translateX(0); }
+  .hero-cta:hover { color: var(--dark); }
+  .hero-cta span { position: relative; z-index: 1; }
+  .hero-cta .arrow { font-size: 1rem; position: relative; z-index: 1; transition: transform 0.3s; }
+  .hero-cta:hover .arrow { transform: translateX(5px); }
+
+  .hero-right {
+    text-align: right;
+    opacity: 0;
+    animation: slideUp 1s 2.8s forwards;
+  }
+  .hero-stat {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3.5rem;
+    font-weight: 300;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .hero-stat-label {
+    font-size: 0.5rem;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+  }
+
+  /* CONTROLS HINT */
+  .controls-hint {
+    position: absolute;
+    bottom: 12vh;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    opacity: 0;
+    animation: fadeIn 1s 3.2s forwards;
+  }
+  .controls-hint p {
+    font-size: 0.5rem;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .scroll-indicator {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    margin: 0 auto;
+    animation: pulse 2s infinite;
+  }
+
+  /* SECTION STYLES */
+  section {
+    position: relative;
+    padding: 8rem 4rem;
+  }
+
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.4em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .section-label::before {
+    content: '';
+    width: 30px;
+    height: 1px;
+    background: var(--gold-dim);
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 300;
+    line-height: 1;
+    margin-bottom: 2rem;
+    letter-spacing: -0.01em;
+  }
+
+  /* PERFORMANCE STATS */
+  #performance {
+    background: var(--carbon);
+    overflow: hidden;
+    position: relative;
+  }
+  #performance::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      repeating-linear-gradient(45deg, rgba(201,169,110,0.015) 0px, rgba(201,169,110,0.015) 1px, transparent 1px, transparent 40px),
+      repeating-linear-gradient(-45deg, rgba(201,169,110,0.015) 0px, rgba(201,169,110,0.015) 1px, transparent 1px, transparent 40px);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    margin-top: 4rem;
+  }
+  .stat-card {
+    background: rgba(201,169,110,0.03);
+    border: 1px solid rgba(201,169,110,0.08);
+    padding: 3rem 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.4s;
+  }
+  .stat-card:hover { border-color: rgba(201,169,110,0.3); }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+  }
+  .stat-card:hover::after { transform: translateX(100%); }
+
+  .stat-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 5vw, 5rem);
+    font-weight: 300;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .stat-number .unit {
+    font-size: 0.4em;
+    color: var(--gold);
+    vertical-align: super;
+    font-family: 'Chakra Petch', monospace;
+    letter-spacing: 0.1em;
+  }
+  .stat-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .stat-bar {
+    height: 1px;
+    background: rgba(201,169,110,0.1);
+    position: relative;
+    margin-top: 1.5rem;
+  }
+  .stat-bar-fill {
+    height: 100%;
+    background: var(--gold);
+    width: 0%;
+    transition: width 2s cubic-bezier(0.16,1,0.3,1);
+    box-shadow: 0 0 8px var(--gold);
+  }
+
+  /* MODELS */
+  #models { background: var(--dark); }
+
+  .models-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-top: 4rem;
+  }
+
+  .model-card {
+    position: relative;
+    height: 70vh;
+    overflow: hidden;
+    cursor: none;
+    background: var(--mid);
+  }
+  .model-card-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.8s cubic-bezier(0.16,1,0.3,1);
+    filter: brightness(0.5) saturate(0.8);
+  }
+  .model-card:hover .model-card-bg {
+    transform: scale(1.05);
+    filter: brightness(0.6) saturate(1);
+  }
+  .model-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+    transition: opacity 0.4s;
+  }
+  .model-card-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 3rem;
+  }
+  .model-tag {
+    font-size: 0.5rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+  .model-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 3vw, 3rem);
+    font-weight: 300;
+    color: #fff;
+    margin-bottom: 1rem;
+    line-height: 1;
+  }
+  .model-specs {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(15px);
+    transition: opacity 0.4s, transform 0.4s;
+  }
+  .model-card:hover .model-specs { opacity: 1; transform: translateY(0); }
+  .model-spec {
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .model-spec strong { color: #fff; display: block; font-size: 0.9rem; font-weight: 400; }
+  .model-link {
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    text-decoration: none;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s 0.1s, transform 0.4s 0.1s;
+  }
+  .model-card:hover .model-link { opacity: 1; transform: translateY(0); }
+
+  /* TECHNOLOGY */
+  #technology {
+    background: var(--mid);
+    position: relative;
+  }
+
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    margin-top: 4rem;
+    background: rgba(201,169,110,0.08);
+  }
+  .tech-item {
+    background: var(--mid);
+    padding: 3rem 2.5rem;
+    position: relative;
+    transition: background 0.3s;
+  }
+  .tech-item:hover { background: rgba(201,169,110,0.04); }
+  .tech-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 2rem;
+    position: relative;
+  }
+  .tech-icon svg { width: 100%; height: 100%; }
+  .tech-item-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 400;
+    color: #fff;
+    margin-bottom: 1rem;
+    letter-spacing: 0.02em;
+  }
+  .tech-item-desc {
+    font-size: 0.65rem;
+    line-height: 1.8;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+  .tech-item-tag {
+    display: inline-block;
+    font-size: 0.45rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    border: 1px solid rgba(201,169,110,0.3);
+    padding: 0.3rem 0.8rem;
+    margin-top: 1.5rem;
+    text-transform: uppercase;
+  }
+
+  /* LEGACY */
+  #legacy {
+    background: var(--dark);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8rem;
+    align-items: center;
+    padding: 10rem 4rem;
+  }
+  .legacy-visual {
+    position: relative;
+    height: 600px;
+  }
+  .legacy-year {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(8rem, 15vw, 14rem);
+    font-weight: 300;
+    color: rgba(201,169,110,0.06);
+    position: absolute;
+    top: -2rem;
+    left: -2rem;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    pointer-events: none;
+    user-select: none;
+  }
+  .legacy-timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+  .legacy-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+  }
+  .timeline-item {
+    margin-bottom: 3rem;
+    padding-left: 2rem;
+    position: relative;
+    opacity: 0.4;
+    transition: opacity 0.3s;
+    cursor: default;
+  }
+  .timeline-item:hover { opacity: 1; }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -0.3rem;
+    top: 0.4rem;
+    width: 6px;
+    height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--gold);
+  }
+  .timeline-year {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+  .timeline-event {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 300;
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+  .timeline-desc {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    line-height: 1.7;
+  }
+
+  /* CONTACT */
+  #contact {
+    background: var(--carbon);
+    text-align: center;
+    padding: 10rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  #contact::before {
+    content: 'KOENIGSEGG';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(4rem, 12vw, 10rem);
+    font-weight: 300;
+    color: rgba(201,169,110,0.04);
+    white-space: nowrap;
+    letter-spacing: 0.3em;
+    pointer-events: none;
+    user-select: none;
+  }
+  .contact-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.5rem, 5vw, 5rem);
+    font-weight: 300;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+  .contact-sub {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    margin-bottom: 3rem;
+    text-transform: uppercase;
+    position: relative;
+  }
+  .contact-form {
+    display: flex;
+    gap: 1px;
+    max-width: 600px;
+    margin: 0 auto 4rem;
+    position: relative;
+  }
+  .contact-input {
+    flex: 1;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(201,169,110,0.15);
+    border-right: none;
+    padding: 1rem 1.5rem;
+    color: var(--text);
+    font-family: 'Chakra Petch', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  .contact-input:focus { border-color: var(--gold-dim); }
+  .contact-input::placeholder { color: var(--text-dim); }
+  .contact-btn {
+    background: var(--gold);
+    color: var(--dark);
+    border: none;
+    padding: 1rem 2rem;
+    font-family: 'Chakra Petch', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: background 0.3s;
+  }
+  .contact-btn:hover { background: #e8c285; }
+
+  /* FOOTER */
+  footer {
+    background: var(--dark);
+    border-top: 1px solid rgba(201,169,110,0.1);
+    padding: 3rem 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.35em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+  .footer-copy {
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .footer-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+  .footer-links a {
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.3s;
+    text-transform: uppercase;
+  }
+  .footer-links a:hover { color: var(--gold); }
+
+  /* DAY/NIGHT TOGGLE */
+  .day-night-toggle {
+    position: fixed;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .toggle-btn {
+    width: 36px;
+    height: 36px;
+    background: rgba(201,169,110,0.1);
+    border: 1px solid rgba(201,169,110,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: none;
+    transition: all 0.3s;
+    color: var(--gold-dim);
+  }
+  .toggle-btn:hover { background: rgba(201,169,110,0.2); color: var(--gold); }
+  .toggle-btn svg { width: 16px; height: 16px; }
+  .toggle-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.4rem;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    writing-mode: vertical-rl;
+    text-transform: uppercase;
+  }
+
+  /* AUDIO TOGGLE */
+  .audio-btn {
+    position: fixed;
+    left: 2rem;
+    bottom: 2rem;
+    z-index: 500;
+    width: 44px;
+    height: 44px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(201,169,110,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: none;
+    transition: all 0.3s;
+    color: var(--text-dim);
+  }
+  .audio-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .audio-btn svg { width: 18px; height: 18px; }
+  .audio-waves {
+    position: absolute;
+    inset: -1px;
+    border-radius: 50%;
+    border: 1px solid var(--gold);
+    opacity: 0;
+    animation: audioRipple 1.5s infinite;
+  }
+  .audio-btn.playing .audio-waves { opacity: 0.6; }
+
+  /* KEYFRAMES */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  @keyframes audioRipple {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+
+  /* REVEAL */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s, transform 0.8s cubic-bezier(0.16,1,0.3,1);
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* DIVIDER */
+  .gold-divider {
+    width: 60px;
+    height: 1px;
+    background: var(--gold);
+    margin: 2rem 0;
+    box-shadow: 0 0 8px var(--gold-dim);
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 2rem; }
+    .nav-links { display: none; }
+    section { padding: 5rem 2rem; }
+    .hero-content { left: 2rem; right: 2rem; flex-direction: column; align-items: flex-start; gap: 2rem; }
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    .models-grid { grid-template-columns: 1fr; }
+    .tech-grid { grid-template-columns: 1fr; }
+    #legacy { grid-template-columns: 1fr; gap: 4rem; padding: 5rem 2rem; }
+    footer { flex-direction: column; gap: 2rem; text-align: center; }
+    .footer-links { flex-wrap: wrap; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CUSTOM CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- LOADING SCREEN -->
+<div id="loader">
+  <div class="loader-logo">KOENIGSEGG</div>
+  <div class="loader-sub">Ängelholm, Sweden · Est. 1994</div>
+  <div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+  <div class="progress-text" id="progress-text">INITIALIZING · 0%</div>
+</div>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <a href="#hero" class="nav-logo">Koenigsegg</a>
+  <ul class="nav-links">
+    <li><a href="#models">Models</a></li>
+    <li><a href="#technology">Technology</a></li>
+    <li><a href="#legacy">Legacy</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Configure</a>
+</nav>
+
+<!-- DAY/NIGHT TOGGLE -->
+<div class="day-night-toggle">
+  <button class="toggle-btn" id="toggle-daynight" title="Toggle Day/Night">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="2" x2="12" y2="4"/>
+      <line x1="12" y1="20" x2="12" y2="22"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="2" y1="12" x2="4" y2="12"/>
+      <line x1="20" y1="12" x2="22" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  </button>
+  <span class="toggle-label">Scene</span>
+</div>
+
+<!-- AUDIO TOGGLE -->
+<button class="audio-btn" id="audio-btn" title="Toggle Audio">
+  <div class="audio-waves"></div>
+  <svg id="audio-icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <path d="M9 9H5a1 1 0 01-1-1V7a1 1 0 011-1h4l5-4v16l-5-4z"/>
+    <line x1="17" y1="7" x2="22" y2="12"/><line x1="22" y1="7" x2="17" y2="12"/>
+  </svg>
+  <svg id="audio-icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none">
+    <path d="M9 9H5a1 1 0 01-1-1V7a1 1 0 011-1h4l5-4v16l-5-4z"/>
+    <path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/>
+  </svg>
+</button>
+
+<!-- HERO SECTION -->
+<section id="hero">
+  <div id="canvas-container">
+    <canvas id="three-canvas"></canvas>
+  </div>
+  <div class="hero-overlay"></div>
+  <div class="hero-bottom-fade"></div>
+
+  <div class="hero-content">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Koenigsegg Hypercar Division</div>
+      <h1 class="hero-title">Engineering<br>the <em>Impossible</em></h1>
+      <p class="hero-tagline">Where physics meets obsession · Ängelholm, Sweden</p>
+      <a href="#models" class="hero-cta">
+        <span>Explore Models</span>
+        <span class="arrow">→</span>
+      </a>
+    </div>
+    <div class="hero-right">
+      <div class="hero-stat" id="hero-counter">1,600</div>
+      <div class="hero-stat-label">Horsepower · Jesko Absolut</div>
+    </div>
+  </div>
+
+  <div class="controls-hint">
+    <p>Drag to rotate · Scroll to explore</p>
+    <div class="scroll-indicator"></div>
+  </div>
+</section>
+
+<!-- PERFORMANCE STATS -->
+<section id="performance">
+  <div class="reveal">
+    <div class="section-label">Performance Data</div>
+    <h2 class="section-title">Beyond <em style="font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--gold)">Limits</em></h2>
+    <div class="gold-divider"></div>
+  </div>
+  <div class="stats-grid reveal">
+    <div class="stat-card">
+      <div class="stat-number"><span class="stat-count" data-target="1600">0</span><span class="unit">HP</span></div>
+      <div class="stat-label">Peak Power Output</div>
+      <div class="stat-bar"><div class="stat-bar-fill" data-width="100"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number"><span class="stat-count" data-target="330">0</span><span class="unit">KM/H</span></div>
+      <div class="stat-label">Top Speed (Gemera)</div>
+      <div class="stat-bar"><div class="stat-bar-fill" data-width="75"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number"><span class="stat-count" data-target="2.9">0</span><span class="unit">SEC</span></div>
+      <div class="stat-label">0 – 100 km/h</div>
+      <div class="stat-bar"><div class="stat-bar-fill" data-width="88"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number"><span class="stat-count" data-target="1270">0</span><span class="unit">KG</span></div>
+      <div class="stat-label">Dry Weight (Jesko)</div>
+      <div class="stat-bar"><div class="stat-bar-fill" data-width="60"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODELS -->
+<section id="models">
+  <div class="reveal">
+    <div class="section-label">Model Lineup</div>
+    <h2 class="section-title">The Collection</h2>
+    <div class="gold-divider"></div>
+  </div>
+  <div class="models-grid reveal">
+    <div class="model-card">
+      <div class="model-card-bg" style="background: linear-gradient(135deg, #1a0a00 0%, #0d0d0d 40%, #0a1a0a 100%); background-image: url('https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=1200&q=80'); background-size:cover;"></div>
+      <div class="model-card-overlay"></div>
+      <div class="model-card-content">
+        <div class="model-tag">Hypercar · 2021</div>
+        <div class="model-name">Jesko<br>Absolut</div>
+        <div class="model-specs">
+          <div class="model-spec"><strong>1,600</strong>HP</div>
+          <div class="model-spec"><strong>330+</strong>KM/H</div>
+          <div class="model-spec"><strong>125</strong>Units</div>
+        </div>
+        <a href="#" class="model-link">View Details →</a>
+      </div>
+    </div>
+    <div class="model-card">
+      <div class="model-card-bg" style="background: linear-gradient(135deg, #00001a 0%, #0d0d0d 40%, #1a0010 100%); background-image: url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200&q=80'); background-size:cover;"></div>
+      <div class="model-card-overlay"></div>
+      <div class="model-card-content">
+        <div class="model-tag">Mega GT · 2022</div>
+        <div class="model-name">Gemera</div>
+        <div class="model-specs">
+          <div class="model-spec"><strong>1,700</strong>HP</div>
+          <div class="model-spec"><strong>4</strong>Seats</div>
+          <div class="model-spec"><strong>300</strong>Units</div>
+        </div>
+        <a href="#" class="model-link">View Details →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECHNOLOGY -->
+<section id="technology">
+  <div class="reveal">
+    <div class="section-label">Innovation Lab</div>
+    <h2 class="section-title">Pioneering <em style="font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--gold)">Technology</em></h2>
+    <div class="gold-divider"></div>
+  </div>
+  <div class="tech-grid reveal">
+    <div class="tech-item">
+      <div class="tech-icon">
+        <svg viewBox="0 0 48 48" fill="none" stroke="var(--gold)" stroke-width="1">
+          <circle cx="24" cy="24" r="20"/>
+          <path d="M16 24 C16 16 24 12 24 24 C24 36 32 32 32 24"/>
+          <circle cx="24" cy="24" r="3" fill="var(--gold)"/>
+        </svg>
+      </div>
+      <div class="tech-item-title">Freevalve Technology</div>
+      <div class="tech-item-desc">Pneumatic and electromagnetic actuators replace the conventional camshaft, granting individual control over each valve for unprecedented power delivery and efficiency.</div>
+      <div class="tech-item-tag">Patented · KPS</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-icon">
+        <svg viewBox="0 0 48 48" fill="none" stroke="var(--gold)" stroke-width="1">
+          <path d="M8 8 L24 4 L40 8 L40 28 C40 38 24 44 24 44 C24 44 8 38 8 28 Z"/>
+          <path d="M16 20 L24 16 L32 20 L32 32 C32 36 24 40 24 40 C24 40 16 36 16 32 Z"/>
+        </svg>
+      </div>
+      <div class="tech-item-title">Carbon Fiber Monocoque</div>
+      <div class="tech-item-desc">Every panel, chassis component and structural element is crafted from aerospace-grade carbon fiber, achieving a body-in-white weight of just 72 kilograms.</div>
+      <div class="tech-item-tag">Aerospace Grade</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-icon">
+        <svg viewBox="0 0 48 48" fill="none" stroke="var(--gold)" stroke-width="1">
+          <rect x="8" y="20" width="32" height="16" rx="2"/>
+          <path d="M14 20 V16 C14 12 20 8 24 8 C28 8 34 12 34 16 V20"/>
+          <circle cx="18" cy="28" r="3" fill="var(--gold)" opacity="0.5"/>
+          <circle cx="30" cy="28" r="3" fill="var(--gold)" opacity="0.5"/>
+          <line x1="18" y1="28" x2="30" y2="28" stroke="var(--gold)" opacity="0.3"/>
+        </svg>
+      </div>
+      <div class="tech-item-title">9-Speed LST Gearbox</div>
+      <div class="tech-item-desc">The Light Speed Transmission can pre-select and execute any of 9 gear ratios simultaneously in under two milliseconds, eliminating torque interruption entirely.</div>
+      <div class="tech-item-tag">Koenigsegg LST</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-icon">
+        <svg viewBox="0 0 48 48" fill="none" stroke="var(--gold)" stroke-width="1">
+          <path d="M24 4 L28 18 L42 18 L31 27 L35 41 L24 32 L13 41 L17 27 L6 18 L20 18 Z"/>
+        </svg>
+      </div>
+      <div class="tech-item-title">Twin-Turbo V8 Engine</div>
+      <div class="tech-item-desc">The 5.0L twin-turbocharged V8 produces 1,600hp on E85 fuel. Bespoke crankshaft, titanium connecting rods, and flat-plane design define its character.</div>
+      <div class="tech-item-tag">5.0L · Flat-Plane</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-icon">
+        <svg viewBox="0 0 48 48" fill="none" stroke="var(--gold)" stroke-width="1">
+          <path d="M12 36 L8 28 L16 24 L8 20 L12 12 L20 16 L24 8 L28 16 L36 12 L40 20 L32 24 L40 28 L36 36 L28 32 L24 40 L20 32 Z"/>
+          <circle cx="24" cy="24" r="6"/>
+        </svg>
+      </div>
+      <div class="tech-item-title">Triplex Suspension</div>
+      <div class="tech-item-desc">A third damper per axle controls chassis squat and pitch independently, maintaining optimal aerodynamic ride height at all speeds and under all load conditions.</div>
+      <div class="tech-item-tag">Active Aero</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-icon">
+        <svg viewBox="0 0 48 48" fill="none" stroke="var(--gold)" stroke-width="1">
+          <path d="M8 12 L40 12"/>
+          <path d="M12 12 L12 36 C12 36 24 42 24 42 C24 42 36 36 36 36 L36 12"/>
+          <path d="M16 20 L24 24 L32 20"/>
+          <path d="M24 24 L24 34"/>
+        </svg>
+      </div>
+      <div class="tech-item-title">Integrated Telemetry</div>
+      <div class="tech-item-desc">A proprietary onboard computer logs 200 sensor channels at 100Hz, enabling driver coaching, predictive maintenance, and track optimization in real-time.</div>
+      <div class="tech-item-tag">KIT System</div>
+    </div>
+  </div>
+</section>
+
+<!-- LEGACY -->
+<section id="legacy">
+  <div class="legacy-visual reveal">
+    <div class="legacy-year">1994</div>
+    <div class="legacy-timeline">
+      <div class="timeline-item">
+        <div class="timeline-year">1994</div>
+        <div class="timeline-event">The Genesis</div>
+        <div class="timeline-desc">Christian von Koenigsegg founds the company in Ängelholm, Sweden at age 22, determined to build the world's finest supercar.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2002</div>
+        <div class="timeline-event">CC8S Debut</div>
+        <div class="timeline-desc">The first production Koenigsegg enters the world with 655hp, immediately setting the benchmark for Swedish performance engineering.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2011</div>
+        <div class="timeline-event">Agera World Record</div>
+        <div class="timeline-desc">The Agera R sets multiple world records, including fastest 0–300–0 km/h in 21.19 seconds, rewriting automotive history.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2019</div>
+        <div class="timeline-event">277.9 mph</div>
+        <div class="timeline-desc">The Agera RS becomes the world's fastest production car, achieving 277.9 mph on a closed Nevada highway — a record still standing.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2024</div>
+        <div class="timeline-event">Next Chapter</div>
+        <div class="timeline-desc">Jesko Absolut and Gemera enter delivery phase. The impossible becomes inevitable once more.</div>
+      </div>
+    </div>
+  </div>
+  <div class="reveal">
+    <div class="section-label">Heritage</div>
+    <h2 class="section-title">Thirty Years of<br><em style="font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--gold)">Obsession</em></h2>
+    <div class="gold-divider"></div>
+    <p style="font-size:0.7rem;line-height:2;color:var(--text-dim);max-width:420px;letter-spacing:0.05em;margin-bottom:2.5rem;">
+      Every Koenigsegg is a statement against convention. Against the ordinary. Against the idea that limitations are anything more than a starting point. Since 1994, we have built fewer than 250 cars. Each one a hand-signed, numbered proof that one person's obsession can reshape what is possible.
+    </p>
+    <a href="#contact" class="hero-cta" style="display:inline-flex">
+      <span>Commission Yours</span>
+      <span class="arrow">→</span>
+    </a>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="reveal">
+    <h2 class="contact-title">Begin Your<br><em style="font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--gold)">Journey</em></h2>
+    <p class="contact-sub">Private Acquisitions · Global Delivery · Bespoke Configuration</p>
+    <div class="contact-form">
+      <input type="email" class="contact-input" placeholder="Your email address">
+      <button class="contact-btn">Request Access</button>
+    </div>
+    <p style="font-size:0.5rem;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;position:relative;">Production is strictly limited · Allocation by invitation</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Koenigsegg</div>
+  <div class="footer-copy">© 2024 Koenigsegg Automotive AB</div>
+  <ul class="footer-links">
+    <li><a href="#">Instagram</a></li>
+    <li><a href="#">YouTube</a></li>
+    <li><a href="#">LinkedIn</a></li>
+    <li><a href="#">Privacy</a></li>
+  </ul>
+</footer>
+
+<!-- THREE.JS & DEPS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+
+// ─────────────────────────────────────────────
+// CURSOR
+// ─────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+let mx = 0, my = 0, rx = 0, ry = 0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx + 'px';
+  cursor.style.top = my + 'px';
+});
+function animCursor() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  cursorRing.style.left = rx + 'px';
+  cursorRing.style.top = ry + 'px';
+  requestAnimationFrame(animCursor);
+}
+animCursor();
+
+document.querySelectorAll('a, button, .model-card, .stat-card, .tech-item, .timeline-item').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.width = '6px';
+    cursor.style.height = '6px';
+    cursorRing.style.width = '60px';
+    cursorRing.style.height = '60px';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.width = '10px';
+    cursor.style.height = '10px';
+    cursorRing.style.width = '40px';
+    cursorRing.style.height = '40px';
+  });
+});
+
+// ─────────────────────────────────────────────
+// LOADING SCREEN
+// ─────────────────────────────────────────────
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
+const loader = document.getElementById('loader');
+
+let loadProgress = 0;
+const loadInterval = setInterval(() => {
+  loadProgress += Math.random() * 12;
+  if (loadProgress >= 100) {
+    loadProgress = 100;
+    clearInterval(loadInterval);
+    setTimeout(() => {
+      loader.classList.add('hidden');
+      initScene();
+    }, 600);
+  }
+  progressBar.style.width = loadProgress + '%';
+  progressText.textContent = `INITIALIZING · ${Math.floor(loadProgress)}%`;
+}, 120);
+
+// ─────────────────────────────────────────────
+// NAV SCROLL
+// ─────────────────────────────────────────────
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 50) navbar.classList.add('scrolled');
+  else navbar.classList.remove('scrolled');
+});
+
+// ─────────────────────────────────────────────
+// REVEAL ON SCROLL
+// ─────────────────────────────────────────────
+const revealEls = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      // Trigger stat bars
+      e.target.querySelectorAll('.stat-bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.width + '%';
+      });
+      // Trigger counters
+      e.target.querySelectorAll('.stat-count').forEach(el => {
+        animateCounter(el);
+      });
+      revealObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.15 });
+revealEls.forEach(el => revealObserver.observe(el));
+
+// ─────────────────────────────────────────────
+// COUNTERS
+// ─────────────────────────────────────────────
+function animateCounter(el) {
+  const target = parseFloat(el.dataset.target);
+  const isDecimal = target % 1 !== 0;
+  const duration = 2000;
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 4);
+    const val = target * ease;
+    el.textContent = isDecimal ? val.toFixed(1) : Math.floor(val).toLocaleString();
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// ─────────────────────────────────────────────
+// THREE.JS SCENE
+// ─────────────────────────────────────────────
+let scene, camera, renderer, car, carGroup;
+let isDay = false;
+let isDragging = false;
+let prevMouseX = 0, prevMouseY = 0;
+let targetRotY = 0, targetRotX = 0;
+let currentRotY = 0, currentRotX = 0;
+let headlights = [], glowSpheres = [], particles;
+let clock;
+let postEffects = {};
+
+function initScene() {
+  clock = new THREE.Clock();
+  const canvas = document.getElementById('three-canvas');
+  const container = document.getElementById('canvas-container');
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x020202);
+  scene.fog = new THREE.FogExp2(0x020202, 0.025);
+
+  // Camera
+  camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 200);
+  camera.position.set(0, 1.8, 8);
+
+  // Ambient
+  const ambient = new THREE.AmbientLight(0x0a0a14, 0.4);
+  scene.add(ambient);
+
+  // Key light (moon/sun depending on mode)
+  const keyLight = new THREE.DirectionalLight(0x8090ff, 0.8);
+  keyLight.position.set(-5, 8, 5);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.set(2048, 2048);
+  keyLight.shadow.camera.near = 0.5;
+  keyLight.shadow.camera.far = 30;
+  keyLight.shadow.camera.left = -8;
+  keyLight.shadow.camera.right = 8;
+  keyLight.shadow.camera.top = 8;
+  keyLight.shadow.camera.bottom = -8;
+  scene.add(keyLight);
+  postEffects.keyLight = keyLight;
+  postEffects.ambient = ambient;
+
+  // Neon rim lights
+  const rimL = new THREE.PointLight(0xff3300, 2, 10);
+  rimL.position.set(-4, 1, -2);
+  scene.add(rimL);
+
+  const rimR = new THREE.PointLight(0x0033ff, 1.5, 10);
+  rimR.position.set(4, 1, -2);
+  scene.add(rimR);
+
+  const rimTop = new THREE.PointLight(0xc9a96e, 1, 8);
+  rimTop.position.set(0, 5, 0);
+  scene.add(rimTop);
+  postEffects.rimTop = rimTop;
+
+  // Floor
+  const floorGeo = new THREE.PlaneGeometry(40, 40);
+  const floorMat = new THREE.MeshStandardMaterial({
+    color: 0x050505,
+    roughness: 0.1,
+    metalness: 0.8,
+  });
+  const floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -1.05;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  // Floor reflection strip
+  const stripGeo = new THREE.PlaneGeometry(1.5, 40);
+  const stripMat = new THREE.MeshStandardMaterial({
+    color: 0xc9a96e,
+    emissive: 0xc9a96e,
+    emissiveIntensity: 0.08,
+    roughness: 0,
+    metalness: 1,
+    transparent: true,
+    opacity: 0.15,
+  });
+  const strip = new THREE.Mesh(stripGeo, stripMat);
+  strip.rotation.x = -Math.PI / 2;
+  strip.position.y = -1.04;
+  scene.add(strip);
+
+  // Build Koenigsegg car (procedural)
+  buildCar();
+
+  // Particles (floating dust)
+  buildParticles();
+
+  // Grid lines on floor
+  buildGrid();
+
+  // Background tunnel arches
+  buildTunnel();
+
+  // Events
+  setupControls(canvas);
+  window.addEventListener('resize', onResize);
+
+  animate();
+}
+
+// ─────────────────────────────────────────────
+// BUILD CAR (Procedural - Koenigsegg-inspired)
+// ─────────────────────────────────────────────
+function buildCar() {
+  carGroup = new THREE.Group();
+
+  const carbonMat = new THREE.MeshStandardMaterial({
+    color: 0x0d0d0d,
+    roughness: 0.3,
+    metalness: 0.8,
+    envMapIntensity: 1.5,
+  });
+  const goldMat = new THREE.MeshStandardMaterial({
+    color: 0xc9a96e,
+    roughness: 0.1,
+    metalness: 1.0,
+    emissive: 0xc9a96e,
+    emissiveIntensity: 0.1,
+  });
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0x112244,
+    roughness: 0,
+    metalness: 0.1,
+    transparent: true,
+    opacity: 0.5,
+  });
+  const tireMat = new THREE.MeshStandardMaterial({
+    color: 0x111111,
+    roughness: 0.9,
+    metalness: 0.0,
+  });
+  const rimMat = new THREE.MeshStandardMaterial({
+    color: 0x888888,
+    roughness: 0.1,
+    metalness: 1.0,
+  });
+  const glowMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    emissive: 0xffffff,
+    emissiveIntensity: 0,
+    roughness: 1,
+    metalness: 0,
+  });
+  const tailMat = new THREE.MeshStandardMaterial({
+    color: 0xff0000,
+    emissive: 0xff0000,
+    emissiveIntensity: 0,
+    roughness: 1,
+  });
+
+  // === BODY ===
+  // Main low body shell
+  const bodyGeo = new THREE.BoxGeometry(2.2, 0.42, 4.8);
+  bodyGeo.translate(0, 0, 0);
+  const body = new THREE.Mesh(bodyGeo, carbonMat);
+  body.position.y = -0.3;
+  body.castShadow = true;
+  carGroup.add(body);
+
+  // Upper cabin (tapered)
+  const cabinShape = new THREE.Shape();
+  cabinShape.moveTo(-0.9, 0);
+  cabinShape.lineTo(0.9, 0);
+  cabinShape.lineTo(0.6, 0.6);
+  cabinShape.lineTo(-0.6, 0.6);
+  cabinShape.closePath();
+  const cabinExtrudeSettings = { depth: 2.2, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3 };
+  const cabinGeo = new THREE.ExtrudeGeometry(cabinShape, cabinExtrudeSettings);
+  cabinGeo.translate(-0.9, 0, -1.1);
+  cabinGeo.rotateX(Math.PI * -0.04);
+  const cabin = new THREE.Mesh(cabinGeo, carbonMat);
+  cabin.position.y = 0.02;
+  cabin.position.z = -0.1;
+  cabin.castShadow = true;
+  carGroup.add(cabin);
+
+  // Nose (low wedge)
+  const noseGeo = new THREE.CylinderGeometry(0, 1.0, 1.2, 3, 1);
+  noseGeo.rotateX(Math.PI / 2);
+  noseGeo.rotateY(Math.PI);
+  noseGeo.scale(1, 0.25, 1);
+  const nose = new THREE.Mesh(noseGeo, carbonMat);
+  nose.position.set(0, -0.38, 2.6);
+  carGroup.add(nose);
+
+  // Rear diffuser
+  const diffGeo = new THREE.BoxGeometry(2.0, 0.3, 0.6);
+  const diff = new THREE.Mesh(diffGeo, carbonMat);
+  diff.position.set(0, -0.6, -2.5);
+  carGroup.add(diff);
+
+  // Rear wing
+  const wingGeo = new THREE.BoxGeometry(2.4, 0.06, 0.5);
+  const wing = new THREE.Mesh(wingGeo, carbonMat);
+  wing.position.set(0, 0.7, -2.2);
+  wing.rotation.x = -0.15;
+  carGroup.add(wing);
+
+  // Wing pillars
+  [-0.9, 0.9].forEach(x => {
+    const pillarGeo = new THREE.BoxGeometry(0.07, 0.6, 0.07);
+    const pillar = new THREE.Mesh(pillarGeo, carbonMat);
+    pillar.position.set(x, 0.38, -2.2);
+    carGroup.add(pillar);
+  });
+
+  // Gold accent stripe
+  const stripeGeo = new THREE.BoxGeometry(2.22, 0.03, 4.82);
+  const stripe = new THREE.Mesh(stripeGeo, goldMat);
+  stripe.position.y = -0.09;
+  carGroup.add(stripe);
+
+  // Side skirts
+  [-1.1, 1.1].forEach((x, i) => {
+    const skirtGeo = new THREE.BoxGeometry(0.06, 0.15, 4.2);
+    const skirt = new THREE.Mesh(skirtGeo, goldMat);
+    skirt.position.set(x, -0.45, 0);
+    carGroup.add(skirt);
+  });
+
+  // Windshield
+  const windGeo = new THREE.BoxGeometry(1.7, 0.55, 0.06);
+  windGeo.rotateX(-0.35);
+  const wind = new THREE.Mesh(windGeo, glassMat);
+  wind.position.set(0, 0.38, 0.9);
+  carGroup.add(wind);
+
+  // Rear glass
+  const rearGlassGeo = new THREE.BoxGeometry(1.4, 0.4, 0.06);
+  rearGlassGeo.rotateX(0.25);
+  const rearGlass = new THREE.Mesh(rearGlassGeo, glassMat);
+  rearGlass.position.set(0, 0.3, -1.15);
+  carGroup.add(rearGlass);
+
+  // === WHEELS ===
+  const wheelPositions = [
+    { x: -1.0, y: -0.65, z: 1.5, r: true },
+    { x: 1.0, y: -0.65, z: 1.5, r: false },
+    { x: -1.0, y: -0.65, z: -1.4, r: true },
+    { x: 1.0, y: -0.65, z: -1.4, r: false },
+  ];
+
+  car = new THREE.Group();
+
+  wheelPositions.forEach(wp => {
+    const wGroup = new THREE.Group();
+
+    // Tire
+    const tireGeo = new THREE.TorusGeometry(0.38, 0.13, 16, 48);
+    const tire = new THREE.Mesh(tireGeo, tireMat);
+    tire.castShadow = true;
+    wGroup.add(tire);
+
+    // Rim center
+    const rimGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.12, 10);
+    rimGeo.rotateX(Math.PI / 2);
+    const rim = new THREE.Mesh(rimGeo, rimMat);
+    wGroup.add(rim);
+
+    // Spokes
+    for (let s = 0; s < 5; s++) {
+      const spokeGeo = new THREE.BoxGeometry(0.04, 0.22, 0.04);
+      const spoke = new THREE.Mesh(spokeGeo, rimMat);
+      spoke.rotation.z = (s / 5) * Math.PI * 2;
+      spoke.position.y = 0.11 * Math.sin((s / 5) * Math.PI * 2);
+      spoke.position.x = 0.11 * Math.cos((s / 5) * Math.PI * 2);
+      wGroup.add(spoke);
+    }
+
+    wGroup.rotation.y = Math.PI / 2;
+    wGroup.position.set(wp.x, wp.y, wp.z);
+    car.add(wGroup);
+  });
+
+  car.add(carGroup);
+  car.position.y = 0.1;
+  scene.add(car);
+
+  // === HEADLIGHTS ===
+  const hlPositions = [{ x: -0.7, z: 2.55 }, { x: 0.7, z: 2.55 }];
+  hlPositions.forEach(p => {
+    const hlGeo = new THREE.SphereGeometry(0.08, 12, 12);
+    const hlMesh = new THREE.Mesh(hlGeo, glowMat);
+    hlMesh.position.set(p.x, -0.2, p.z);
+    carGroup.add(hlMesh);
+    glowSpheres.push(hlMesh);
+
+    const light = new THREE.SpotLight(0xffffff, 0, 15, Math.PI / 8, 0.5, 2);
+    light.position.set(p.x, -0.2, p.z + 0.1);
+    light.target.position.set(p.x, -1, p.z + 8);
+    carGroup.add(light);
+    carGroup.add(light.target);
+    headlights.push(light);
+  });
+
+  // === TAIL LIGHTS ===
+  const tlPositions = [{ x: -0.75, z: -2.5 }, { x: 0.75, z: -2.5 }];
+  tlPositions.forEach(p => {
+    const tlGeo = new THREE.BoxGeometry(0.4, 0.06, 0.04);
+    const tlMesh = new THREE.Mesh(tlGeo, tailMat);
+    tlMesh.position.set(p.x, -0.1, p.z);
+    carGroup.add(tlMesh);
+    glowSpheres.push(tlMesh);
+  });
+}
+
+// ─────────────────────────────────────────────
+// PARTICLES
+// ─────────────────────────────────────────────
+function buildParticles() {
+  const count = 800;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    pos[i * 3] = (Math.random() - 0.5) * 30;
+    pos[i * 3 + 1] = Math.random() * 8 - 1;
+    pos[i * 3 + 2] = (Math.random() - 0.5) * 30;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({ color: 0xc9a96e, size: 0.03, transparent: true, opacity: 0.4 });
+  particles = new THREE.Points(geo, mat);
+  scene.add(particles);
+}
+
+// ─────────────────────────────────────────────
+// GRID
+// ─────────────────────────────────────────────
+function buildGrid() {
+  const gridHelper = new THREE.GridHelper(40, 40, 0xc9a96e, 0x1a1a1a);
+  gridHelper.material.opacity = 0.2;
+  gridHelper.material.transparent = true;
+  gridHelper.position.y = -1.04;
+  scene.add(gridHelper);
+}
+
+// ─────────────────────────────────────────────
+// TUNNEL
+// ─────────────────────────────────────────────
+function buildTunnel() {
+  const archMat = new THREE.MeshStandardMaterial({
+    color: 0x0d0d0d,
+    roughness: 0.8,
+    metalness: 0.2,
+    emissive: 0xc9a96e,
+    emissiveIntensity: 0.02,
+  });
+  for (let i = -5; i <= 1; i++) {
+    const archGeo = new THREE.TorusGeometry(3.5, 0.06, 8, 40, Math.PI);
+    const arch = new THREE.Mesh(archGeo, archMat);
+    arch.rotation.x = Math.PI / 2;
+    arch.rotation.z = Math.PI;
+    arch.position.set(0, 2.4, i * 5 - 3);
+    scene.add(arch);
+
+    // Neon edge
+    const edgeMat = new THREE.MeshStandardMaterial({
+      color: 0xc9a96e,
+      emissive: 0xc9a96e,
+      emissiveIntensity: 0.5,
+      roughness: 1,
+    });
+    const edgeGeo = new THREE.TorusGeometry(3.5, 0.015, 4, 40, Math.PI);
+    const edge = new THREE.Mesh(edgeGeo, edgeMat);
+    edge.rotation.x = Math.PI / 2;
+    edge.rotation.z = Math.PI;
+    edge.position.set(0, 2.4, i * 5 - 3);
+    scene.add(edge);
+  }
+}
+
+// ─────────────────────────────────────────────
+// CONTROLS
+// ─────────────────────────────────────────────
+function setupControls(canvas) {
+  canvas.addEventListener('mousedown', e => {
+    isDragging = true;
+    prevMouseX = e.clientX;
+    prevMouseY = e.clientY;
+  });
+  window.addEventListener('mouseup', () => isDragging = false);
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    const dx = e.clientX - prevMouseX;
+    const dy = e.clientY - prevMouseY;
+    targetRotY += dx * 0.008;
+    targetRotX += dy * 0.004;
+    targetRotX = Math.max(-0.3, Math.min(0.3, targetRotX));
+    prevMouseX = e.clientX;
+    prevMouseY = e.clientY;
+  });
+
+  // Touch
+  let prevTouchX = 0;
+  canvas.addEventListener('touchstart', e => { prevTouchX = e.touches[0].clientX; });
+  canvas.addEventListener('touchmove', e => {
+    const dx = e.touches[0].clientX - prevTouchX;
+    targetRotY += dx * 0.01;
+    prevTouchX = e.touches[0].clientX;
+  });
+
+  // Scroll parallax camera
+  window.addEventListener('scroll', () => {
+    const progress = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+    if (camera) {
+      camera.position.z = 8 - progress * 3;
+      camera.position.y = 1.8 + progress * 0.5;
+    }
+  });
+}
+
+function onResize() {
+  const c = document.getElementById('canvas-container');
+  camera.aspect = c.clientWidth / c.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(c.clientWidth, c.clientHeight);
+}
+
+// ─────────────────────────────────────────────
+// ANIMATE
+// ─────────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+
+  // Smooth car rotation
+  currentRotY += (targetRotY - currentRotY) * 0.06;
+  currentRotX += (targetRotX - currentRotX) * 0.06;
+  if (car) {
+    car.rotation.y = currentRotY;
+    car.rotation.x = currentRotX;
+    // Idle breathe
+    car.position.y = 0.1 + Math.sin(t * 0.6) * 0.03;
+  }
+
+  // Auto-slow rotate when not dragging
+  if (!isDragging) {
+    targetRotY += 0.002;
+  }
+
+  // Particles drift
+  if (particles) {
+    particles.rotation.y = t * 0.015;
+    const positions = particles.geometry.attributes.position.array;
+    for (let i = 1; i < positions.length; i += 3) {
+      positions[i] += Math.sin(t * 0.3 + i) * 0.0003;
+    }
+    particles.geometry.attributes.position.needsUpdate = true;
+  }
+
+  // Glow pulse
+  glowSpheres.forEach((g, i) => {
+    if (g.material.emissiveIntensity > 0) {
+      g.material.emissiveIntensity = g.material.emissiveIntensity > 0.5
+        ? 0.5 + Math.sin(t * 3 + i) * 0.1
+        : g.material.emissiveIntensity;
+    }
+  });
+
+  renderer.render(scene, camera);
+}
+
+// ─────────────────────────────────────────────
+// DAY / NIGHT TOGGLE
+// ─────────────────────────────────────────────
+document.getElementById('toggle-daynight').addEventListener('click', () => {
+  isDay = !isDay;
+  if (isDay) {
+    scene.background = new THREE.Color(0xd4e8f0);
+    scene.fog = new THREE.FogExp2(0xc8dce8, 0.015);
+    postEffects.keyLight.color.setHex(0xfff5e0);
+    postEffects.keyLight.intensity = 2.5;
+    postEffects.ambient.color.setHex(0x8090b0);
+    postEffects.ambient.intensity = 1.2;
+    postEffects.rimTop.color.setHex(0xffffff);
+    // Enable headlights off, tail red off
+    headlights.forEach(l => l.intensity = 0);
+    glowSpheres.forEach(g => { g.material.emissiveIntensity = 0; });
+    renderer.toneMappingExposure = 0.9;
+  } else {
+    scene.background = new THREE.Color(0x020202);
+    scene.fog = new THREE.FogExp2(0x020202, 0.025);
+    postEffects.keyLight.color.setHex(0x8090ff);
+    postEffects.keyLight.intensity = 0.8;
+    postEffects.ambient.color.setHex(0x0a0a14);
+    postEffects.ambient.intensity = 0.4;
+    postEffects.rimTop.color.setHex(0xc9a96e);
+    renderer.toneMappingExposure = 1.2;
+  }
+  // Toggle headlights
+  headlights.forEach(l => {
+    l.intensity = isDay ? 0 : 3;
+  });
+  glowSpheres.forEach((g, i) => {
+    if (g.material.emissive) {
+      g.material.emissiveIntensity = isDay ? 0 : (i < 2 ? 1.5 : 0.8);
+    }
+  });
+});
+
+// ─────────────────────────────────────────────
+// AUDIO (engine rev simulation via Web Audio API)
+// ─────────────────────────────────────────────
+let audioCtx = null, oscillators = [], gainNode = null, isPlaying = false;
+const audioBtn = document.getElementById('audio-btn');
+const audioIconOff = document.getElementById('audio-icon-off');
+const audioIconOn = document.getElementById('audio-icon-on');
+
+function startEngineAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  gainNode = audioCtx.createGain();
+  gainNode.gain.value = 0;
+  gainNode.connect(audioCtx.destination);
+
+  // Layer multiple oscillators for engine texture
+  const configs = [
+    { freq: 80, type: 'sawtooth', gain: 0.15 },
+    { freq: 160, type: 'sawtooth', gain: 0.08 },
+    { freq: 240, type: 'square', gain: 0.04 },
+    { freq: 45, type: 'sine', gain: 0.2 },
+  ];
+
+  configs.forEach(cfg => {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = cfg.type;
+    osc.frequency.value = cfg.freq;
+    g.gain.value = cfg.gain;
+    osc.connect(g);
+    g.connect(gainNode);
+    osc.start();
+
+    // Slight LFO for engine tremolo
+    const lfo = audioCtx.createOscillator();
+    const lfoGain = audioCtx.createGain();
+    lfo.frequency.value = 8 + Math.random() * 4;
+    lfoGain.gain.value = cfg.freq * 0.05;
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+    lfo.start();
+
+    oscillators.push(osc);
+  });
+
+  gainNode.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 1.5);
+}
+
+function stopEngineAudio() {
+  if (!gainNode) return;
+  gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.8);
+  setTimeout(() => {
+    oscillators.forEach(o => { try { o.stop(); } catch(e){} });
+    oscillators = [];
+    if (audioCtx) { audioCtx.close(); audioCtx = null; }
+  }, 900);
+}
+
+audioBtn.addEventListener('click', () => {
+  isPlaying = !isPlaying;
+  if (isPlaying) {
+    startEngineAudio();
+    audioBtn.classList.add('playing');
+    audioIconOff.style.display = 'none';
+    audioIconOn.style.display = 'block';
+  } else {
+    stopEngineAudio();
+    audioBtn.classList.remove('playing');
+    audioIconOff.style.display = 'block';
+    audioIconOn.style.display = 'none';
+  }
+});
+
+// Rev on scroll
+window.addEventListener('scroll', () => {
+  if (isPlaying && gainNode && audioCtx) {
+    const scrollFrac = Math.min(window.scrollY / 500, 1);
+    oscillators.forEach((o, i) => {
+      const base = [80, 160, 240, 45][i] || 80;
+      o.frequency.setTargetAtTime(base * (1 + scrollFrac * 1.5), audioCtx.currentTime, 0.2);
+    });
+  }
+});
+
+</script>
+</body>
+</html>

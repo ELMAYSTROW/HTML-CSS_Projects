@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Inventra Logo</title>
+
+<style>
+body{
+    background:#f4f4f4;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+.logo{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.logo-text{
+    font-size:48px;
+    font-weight:700;
+}
+
+.blue{
+    color:#0b3d7a;
+}
+
+.green{
+    color:#2bb34a;
+}
+
+.bar{
+    transform-origin:bottom;
+    transition:0.3s;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="logo">
+
+<!-- Icon -->
+<svg width="120" height="120" viewBox="0 0 120 120">
+
+<defs>
+<linearGradient id="cubeGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop offset="0%" stop-color="#1ec3ff"/>
+<stop offset="100%" stop-color="#1c4ed8"/>
+</linearGradient>
+
+<linearGradient id="cubeGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop offset="0%" stop-color="#2dd36f"/>
+<stop offset="100%" stop-color="#1b8e3e"/>
+</linearGradient>
+</defs>
+
+<!-- cube -->
+<polygon points="20,40 60,20 100,40 60,60"
+fill="url(#cubeGrad1)"/>
+
+<polygon points="20,40 60,60 60,100 20,80"
+fill="url(#cubeGrad2)"/>
+
+<polygon points="60,60 100,40 100,80 60,100"
+fill="#0b3d7a"/>
+
+<!-- check mark -->
+<polyline points="30,65 50,85 90,35"
+fill="none"
+stroke="white"
+stroke-width="10"
+stroke-linecap="round"
+stroke-linejoin="round"/>
+
+<!-- bars -->
+<rect class="bar" id="b1" x="75" y="5" width="6" height="15" fill="#7ed957"/>
+<rect class="bar" id="b2" x="85" y="0" width="6" height="20" fill="#3ddc84"/>
+<rect class="bar" id="b3" x="95" y="-5" width="6" height="25" fill="#1ec3ff"/>
+
+</svg>
+
+<!-- Text -->
+<div class="logo-text">
+<span class="blue">Inven</span><span class="green">tra</span>
+</div>
+
+</div>
+
+<script>
+
+// simple animation for bars
+const bars = document.querySelectorAll(".bar");
+
+setInterval(()=>{
+    bars.forEach(bar=>{
+        let scale = 0.8 + Math.random()*0.6;
+        bar.style.transform = `scaleY(${scale})`;
+    });
+},600);
+
+</script>
+
+</body>
+</html>
